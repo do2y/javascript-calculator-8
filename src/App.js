@@ -17,6 +17,8 @@ class App {
   }
 
   parseInput(userInput) {
+    if (userInput === '') return [0];
+
     const { delimiter, inputWithoutDeclaration } = this.getDelimiter(userInput);
     return inputWithoutDeclaration.split(delimiter).map((v) => parseInt(v, 10));
   }
@@ -60,11 +62,11 @@ class App {
   }
 
   calculateSum(numbers) {
-    // 합산
+    return numbers.reduce((acc, cur) => acc + cur, 0);
   }
 
-  printResult() {
-    // 결과 출력
+  printResult(sum) {
+    Console.print('결과 : ' + sum);
   }
 }
 
