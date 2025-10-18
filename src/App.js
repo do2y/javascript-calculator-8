@@ -26,6 +26,14 @@ class App {
       throw new Error('[ERROR] 숫자가 포함되어야 합니다.');
     }
 
+    if (
+      new RegExp(`^${delimiter.source}|${delimiter.source}$`).test(
+        inputWithoutDeclaration
+      )
+    ) {
+      throw new Error('[ERROR] 구분자는 문자열의 앞이나 뒤에 위치할 수 없습니다.');
+    }
+
     const numbers = inputWithoutDeclaration.split(delimiter).map((v) => {
       if (!/^\d+$/.test(v)) {
         throw new Error(
