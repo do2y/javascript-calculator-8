@@ -21,6 +21,11 @@ class App {
 
     const { delimiter, inputWithoutDeclaration } = this.getDelimiter(userInput);
 
+    // 숫자가 하나도 포함되지 않은 경우
+    if (!/\d/.test(inputWithoutDeclaration)) {
+      throw new Error('[ERROR] 숫자가 포함되어야 합니다.');
+    }
+
     const numbers = inputWithoutDeclaration.split(delimiter).map((v) => {
       if (!/^\d+$/.test(v)) {
         throw new Error(
