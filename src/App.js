@@ -20,7 +20,13 @@ class App {
     if (userInput === '') return [0];
 
     const { delimiter, inputWithoutDeclaration } = this.getDelimiter(userInput);
-    return inputWithoutDeclaration.split(delimiter).map((v) => parseInt(v, 10));
+    const numbers = inputWithoutDeclaration.split(delimiter).map((v) => parseInt(v, 10));
+
+    if (numbers.some((n) => n < 0)) {
+      throw new Error('[ERROR] 음수는 입력할 수 없습니다.');
+    }
+
+    return numbers;
   }
 
   getDelimiter(userInput) {
