@@ -35,17 +35,18 @@ class App {
     }
 
     const numbers = inputWithoutDeclaration.split(delimiter).map((v) => {
+      if (/^-\d+$/.test(v)) {
+        throw new Error('[ERROR] 음수는 입력할 수 없습니다.');
+      }
+
       if (!/^\d+$/.test(v)) {
         throw new Error(
           '[ERROR] 입력은 숫자와 지정된 구분자(, : 또는 커스텀 구분자)만 가능합니다.'
         );
       }
+
       return Number(v);
     });
-
-    if (numbers.some((n) => n < 0)) {
-      throw new Error('[ERROR] 음수는 입력할 수 없습니다.');
-    }
 
     return numbers;
   }
