@@ -62,6 +62,12 @@ class App {
   }
 
   calculateSum(numbers) {
+    if (numbers.some((n) => isNaN(n))) {
+      throw new Error(
+        '[ERROR] 숫자 또는 지정된 구분자(, : 또는 커스텀 구분자)만 입력할 수 있습니다.'
+      );
+    }
+
     return numbers.reduce((acc, cur) => acc + cur, 0);
   }
 
