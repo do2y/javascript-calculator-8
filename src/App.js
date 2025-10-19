@@ -1,4 +1,5 @@
 import { Console } from '@woowacourse/mission-utils';
+import { ERROR_MESSAGES } from './errors.js';
 
 const CUSTOM_DELIMITER_PREFIX = '//';
 const ESCAPED_NEWLINE = '\\n';
@@ -39,14 +40,12 @@ class App {
     }
 
     const endIdx = input.indexOf(ESCAPED_NEWLINE);
-    if (endIdx === -1) throw new Error('[ERROR] 잘못된 커스텀 구분자 형식입니다.');
+    if (endIdx === -1) throw new Error(ERROR_MESSAGES.INVALID_CUSTOM_FORMAT);
 
     const customDelimiter = input.slice(CUSTOM_DELIMITER_START_INDEX, endIdx);
-    if (!customDelimiter) throw new Error('[ERROR] 커스텀 구분자가 입력되지 않았습니다.');
-    if (customDelimiter.length > 1)
-      throw new Error('[ERROR] 커스텀 구분자는 한 글자만 가능합니다.');
-    if (!isNaN(Number(customDelimiter)))
-      throw new Error('[ERROR] 커스텀 구분자로 숫자는 사용할 수 없습니다.');
+    if (!customDelimiter) throw new Error(ERROR_MESSAGES.EMPTY_CUSTOM);
+    if (customDelimiter.length > 1) throw new Error(ERROR_MESSAGES.TOO_LONG_CUSTOM);
+    if (!isNaN(Number(customDelimiter))) throw new Error(ERROR_MESSAGES.NUMBER_CUSTOM);
 
     const inputWithoutDeclaration = input.slice(endIdx + ESCAPED_NEWLINE_LENGTH);
 
@@ -57,20 +56,25 @@ class App {
   }
 
   validateInputStructure(input, delimiter) {
-    if (!/\d/.test(input)) {
-      throw new Error('[ERROR] 숫자가 포함되어야 합니다.');
+    // 구분자나 숫자, 음수 부호(-) 외의 문자가 포함된 경우
+    if (!/^[\d,:-]+$/.test(input)) {
+      throw new Error(ERROR_MESSAGES.INVALID_TOKEN);
     }
 
+    // 숫자가 하나도 포함되지 않은 경우
+    if (!/\d/.test(input)) {
+      throw new Error(ERROR_MESSAGES.NO_NUMBER);
+    }
+
+    // 구분자가 앞뒤에 위치한 경우
     if (new RegExp(`^${delimiter.source}|${delimiter.source}$`).test(input)) {
-      throw new Error('[ERROR] 구분자는 문자열의 앞이나 뒤에 위치할 수 없습니다.');
+      throw new Error(ERROR_MESSAGES.DELIMITER_AT_EDGE);
     }
   }
 
   validateAndConvertNumber(token) {
-    if (/^-\d+$/.test(token)) throw new Error('[ERROR] 음수는 입력할 수 없습니다.');
-    if (!/^\d+$/.test(token)) {
-      throw new Error('[ERROR] 입력은 숫자와 지정된 구분자(, : 또는 커스텀 구분자)만 가능합니다.');
-    }
+    if (/^-\d+$/.test(token)) throw new Error(ERROR_MESSAGES.NEGATIVE_NUMBER);
+    if (!/^\d+$/.test(token)) throw new Error(ERROR_MESSAGES.INVALID_TOKEN);
     return Number(token);
   }
 
