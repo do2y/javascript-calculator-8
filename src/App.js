@@ -1,14 +1,22 @@
 import { Console } from '@woowacourse/mission-utils';
 
-const CUSTOM_DELIMITER_START_INDEX = 2;
-const ESCAPED_NEWLINE_LENGTH = 2;
+const CUSTOM_DELIMITER_PREFIX = '//';
+const ESCAPED_NEWLINE = '\\n';
+const CUSTOM_DELIMITER_START_INDEX = CUSTOM_DELIMITER_PREFIX.length;
+const ESCAPED_NEWLINE_LENGTH = ESCAPED_NEWLINE.length;
+const DEFAULT_DELIMITER = /[,:]/;
 
 class App {
   async run() {
-    const userInput = await this.getUserInput();
-    const numbers = this.parseInput(userInput);
-    const sum = this.calculateSum(numbers);
-    this.printResult(sum);
+    try {
+      const input = await this.getUserInput();
+      const numbers = this.parseInput(input);
+      const sum = this.calculateSum(numbers);
+      this.printResult(sum);
+    } catch (error) {
+      Console.print(error.message);
+      throw error;
+    }
   }
 
   async getUserInput() {
@@ -20,73 +28,50 @@ class App {
     if (userInput === '') return [0];
 
     const { delimiter, inputWithoutDeclaration } = this.getDelimiter(userInput);
+    this.validateInputStructure(inputWithoutDeclaration, delimiter);
 
-    // 숫자가 하나도 포함되지 않은 경우
-    if (!/\d/.test(inputWithoutDeclaration)) {
+    return inputWithoutDeclaration.split(delimiter).map(this.validateAndConvertNumber);
+  }
+
+  getDelimiter(input) {
+    if (!input.startsWith(CUSTOM_DELIMITER_PREFIX)) {
+      return { delimiter: DEFAULT_DELIMITER, inputWithoutDeclaration: input };
+    }
+
+    const endIdx = input.indexOf(ESCAPED_NEWLINE);
+    if (endIdx === -1) throw new Error('[ERROR] 잘못된 커스텀 구분자 형식입니다.');
+
+    const customDelimiter = input.slice(CUSTOM_DELIMITER_START_INDEX, endIdx);
+    if (!customDelimiter) throw new Error('[ERROR] 커스텀 구분자가 입력되지 않았습니다.');
+    if (customDelimiter.length > 1)
+      throw new Error('[ERROR] 커스텀 구분자는 한 글자만 가능합니다.');
+    if (!isNaN(Number(customDelimiter)))
+      throw new Error('[ERROR] 커스텀 구분자로 숫자는 사용할 수 없습니다.');
+
+    const inputWithoutDeclaration = input.slice(endIdx + ESCAPED_NEWLINE_LENGTH);
+
+    return {
+      delimiter: new RegExp(`[,:${customDelimiter}]`),
+      inputWithoutDeclaration
+    };
+  }
+
+  validateInputStructure(input, delimiter) {
+    if (!/\d/.test(input)) {
       throw new Error('[ERROR] 숫자가 포함되어야 합니다.');
     }
 
-    if (
-      new RegExp(`^${delimiter.source}|${delimiter.source}$`).test(
-        inputWithoutDeclaration
-      )
-    ) {
+    if (new RegExp(`^${delimiter.source}|${delimiter.source}$`).test(input)) {
       throw new Error('[ERROR] 구분자는 문자열의 앞이나 뒤에 위치할 수 없습니다.');
     }
-
-    const numbers = inputWithoutDeclaration.split(delimiter).map((v) => {
-      if (/^-\d+$/.test(v)) {
-        throw new Error('[ERROR] 음수는 입력할 수 없습니다.');
-      }
-
-      if (!/^\d+$/.test(v)) {
-        throw new Error(
-          '[ERROR] 입력은 숫자와 지정된 구분자(, : 또는 커스텀 구분자)만 가능합니다.'
-        );
-      }
-
-      return Number(v);
-    });
-
-    return numbers;
   }
 
-  getDelimiter(userInput) {
-    let delimiter = /[,:]/;
-
-    // 커스텀 구분자가 없는 경우, 기본 구분자를 사용한다.
-    if (!userInput.startsWith('//')) {
-      return { delimiter, inputWithoutDeclaration: userInput };
+  validateAndConvertNumber(token) {
+    if (/^-\d+$/.test(token)) throw new Error('[ERROR] 음수는 입력할 수 없습니다.');
+    if (!/^\d+$/.test(token)) {
+      throw new Error('[ERROR] 입력은 숫자와 지정된 구분자(, : 또는 커스텀 구분자)만 가능합니다.');
     }
-
-    const delimiterEndIndex = userInput.indexOf('\\n');
-
-    if (delimiterEndIndex === -1) {
-      throw new Error('[ERROR] 잘못된 커스텀 구분자 형식입니다.');
-    }
-
-    if (delimiterEndIndex === CUSTOM_DELIMITER_START_INDEX) {
-      throw new Error('[ERROR] 커스텀 구분자가 입력되지 않았습니다.');
-    }
-
-    const customDelimiter = userInput.slice(
-      CUSTOM_DELIMITER_START_INDEX,
-      delimiterEndIndex
-    );
-    if (customDelimiter.length > 1) {
-      throw new Error('[ERROR] 커스텀 구분자는 한 글자만 가능합니다.');
-    }
-
-    if (!isNaN(Number(customDelimiter))) {
-      throw new Error('[ERROR] 커스텀 구분자로 숫자는 사용할 수 없습니다.');
-    }
-
-    const inputWithoutDeclaration = userInput.slice(
-      delimiterEndIndex + ESCAPED_NEWLINE_LENGTH
-    );
-
-    delimiter = new RegExp(`[,:${customDelimiter}]`);
-    return { delimiter, inputWithoutDeclaration };
+    return Number(token);
   }
 
   calculateSum(numbers) {
@@ -94,7 +79,7 @@ class App {
   }
 
   printResult(sum) {
-    Console.print('결과 : ' + sum);
+    Console.print(`결과 : ${sum}`);
   }
 }
 
