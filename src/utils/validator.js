@@ -1,7 +1,7 @@
 import { ERROR_MESSAGES } from '../errors.js';
 
 export function validateInputStructure(input, delimiter) {
-  if (!/^[\d,:-]+$/.test(input)) {
+  if (!/^[\d,:-\s]+$/.test(input)) {
     throw new Error(ERROR_MESSAGES.INVALID_TOKEN);
   }
 

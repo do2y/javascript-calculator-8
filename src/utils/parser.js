@@ -12,7 +12,10 @@ export function parseInput(userInput) {
 
   const { delimiter, inputWithoutDeclaration } = getDelimiter(userInput);
   validateInputStructure(inputWithoutDeclaration, delimiter);
-  return inputWithoutDeclaration.split(delimiter).map(validateAndConvertNumber);
+  return inputWithoutDeclaration
+    .split(delimiter)
+    .map((token) => token.trim())
+    .map(validateAndConvertNumber);
 }
 
 export function getDelimiter(input) {
